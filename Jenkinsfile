@@ -31,7 +31,7 @@ pipeline {
             steps {
                 sh '''
                 echo "Killing any existing app running on port 5000..."
-                sudo lsof -t -i:5000 | xargs --no-run-if-empty kill -9 || true
+                sudo lsof -t -i:5000 | xargs --no-run-if-empty sudo kill -9 || true
                 '''
             }
         }
