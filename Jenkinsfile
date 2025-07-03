@@ -33,12 +33,11 @@ pipeline {
         }
 
         stage('Run App') {
-            steps {
-                sh '''
-                . venv/bin/activate
-                nohup python app.py > output.log 2>&1 &
-                '''
-            }
-        }
+    steps {
+        sh '''
+            . venv/bin/activate
+            nohup /var/lib/jenkins/workspace/vm-app-2_new-branch-1/venv/bin/python app.py > app.log 2>&1 &
+        '''
     }
 }
+
