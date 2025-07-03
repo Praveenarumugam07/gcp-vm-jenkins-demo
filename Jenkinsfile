@@ -11,6 +11,7 @@ pipeline {
         stage('Setup Python Environment') {
             steps {
                 sh '''
+                echo "Updating packages and setting up virtual environment..."
                 sudo apt update
                 sudo apt install python3-venv -y
 
@@ -28,17 +29,25 @@ pipeline {
 
         stage('Kill Existing App') {
             steps {
-                sh 'fuser -k 5000/tcp || true'
+                sh '''
+                echo "Killing existing app on port 5000..."
+                sudo kill -9 $(sudo lsof -t -i:5000) || true
+                '''
             }
         }
 
         stage('Run App') {
             steps {
                 sh '''
+                echo "Starting Flask app for current branch..."
+                git branch
+                git log -1
+                cat app.py
+
                 . venv/bin/activate
-                nohup /var/lib/jenkins/workspace/vm-app-2_new-branch-1/venv/bin/python app.py > app.log 2>&1 &
+                nohup python app.py > app.log 2>&1 &
                 '''
             }
-        } // close stage 'Run App'
-    } // close stages
-} // close pipeline
+        }
+    }
+}
