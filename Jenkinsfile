@@ -11,8 +11,9 @@ pipeline {
         stage('Setup Python Environment') {
             steps {
                 sh '''
+                echo "Updating packages and setting up virtual environment..."
                 sudo apt update
-                sudo apt install python3-venv -y
+                sudo apt install python3-venv lsof -y
 
                 if [ ! -d "venv" ]; then
                     python3 -m venv venv
@@ -28,17 +29,31 @@ pipeline {
 
         stage('Kill Existing App') {
             steps {
-                sh 'fuser -k 5000/tcp || true'
+                sh '''
+                echo "Killing any existing app running on port 5000..."
+                sudo lsof -t -i:5000 | xargs --no-run-if-empty sudo kill -9 || true
+                '''
             }
         }
 
         stage('Run App') {
             steps {
                 sh '''
+                echo "Starting the app..."
+                cd /var/lib/jenkins/workspace/${JOB_NAME}
                 . venv/bin/activate
-                nohup /var/lib/jenkins/workspace/vm-app-2_new-branch-1/venv/bin/python app.py > app.log 2>&1 &
+                nohup venv/bin/python app.py > app.log 2>&1 &
+                sleep 5
+
+                echo "Checking if app started successfully..."
+                if lsof -i:5000; then
+                    echo "✅ App started and is listening on port 5000"
+                else
+                    echo "❌ App failed to start"
+                    exit 1
+                fi
                 '''
             }
-        } // close stage 'Run App'
-    } // close stages
-} // close pipeline
+        }
+    }
+}
