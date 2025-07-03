@@ -8,7 +8,7 @@ pipeline {
             }
         }
 
-        stage('Setup & Run') {
+        stage('Setup Python Environment') {
             steps {
                 sh '''
                 sudo apt update
@@ -22,12 +22,23 @@ pipeline {
 
                 pip install --upgrade pip
                 pip install -r requirements.txt
-
-                fuser -k 5000/tcp || true
-
-                nohup python app.py > output.log 2>&1 &
                 '''
             }
         }
-    }
-}
+
+        stage('Kill Existing App') {
+            steps {
+                sh 'fuser -k 5000/tcp || true'
+            }
+        }
+
+        stage('Run App') {
+            steps {
+                sh '''
+                . venv/bin/activate
+                nohup /var/lib/jenkins/workspace/vm-app-2_new-branch-1/venv/bin/python app.py > app.log 2>&1 &
+                '''
+            }
+        } // close stage 'Run App'
+    } // close stages
+} // close pipeline
