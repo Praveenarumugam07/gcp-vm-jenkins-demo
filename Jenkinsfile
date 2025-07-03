@@ -8,7 +8,7 @@ pipeline {
             }
         }
 
-        stage('Setup Python Environment') {
+        stage('Setup & Run') {
             steps {
                 sh '''
                 sudo apt update
@@ -18,24 +18,13 @@ pipeline {
                     python3 -m venv venv
                 fi
 
-                source venv/bin/activate
+                . venv/bin/activate
 
                 pip install --upgrade pip
                 pip install -r requirements.txt
-                '''
-            }
-        }
 
-        stage('Kill Existing App') {
-            steps {
-                sh 'fuser -k 5000/tcp || true'
-            }
-        }
+                fuser -k 5000/tcp || true
 
-        stage('Run App') {
-            steps {
-                sh '''
-                source venv/bin/activate
                 nohup python app.py > output.log 2>&1 &
                 '''
             }
